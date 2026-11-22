@@ -2,7 +2,7 @@
   "name": "ArolX Pro",
   "short_name": "ArolX Pro",
   "description": "منصة ArolX Pro للتداول الاحترافي والتراكمي",
-  "start_url": "/",
+  "start_url": "/auth.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -11,6 +11,12 @@
   "dir": "rtl",
   "lang": "ar",
   "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2534/2534204.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2534/2534204.png",
       "sizes": "512x512",
