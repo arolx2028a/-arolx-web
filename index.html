@@ -4,15 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ArolX Pro - منصة التداول الاحترافية</title>
-    <link rel="manifest" href="./manifest.json" />
-    <meta name="theme-color" content="#0f172a" />
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js").catch(() => {});
-        });
-      }
-    </script>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background: #020617; color: #f8fafc; margin: 0; padding: 16px; padding-bottom: 100px; }
@@ -221,7 +212,7 @@
         <div id="tabHome" class="client-page-tab active">
             <div class="home-hero-card">
                 <span>رصيد الحساب المتاح للتداول</span>
-                <strong id="clientBalance">$500.00</strong>
+                <strong id="clientBalance">$0.00</strong>
             </div>
 
             <div class="profit-today-card">
@@ -338,12 +329,12 @@
         <div id="tabWallet" class="client-page-tab">
             <div class="home-hero-card" style="border-color: #38bdf8;">
                 <span>إجمالي أموال المنصة الكلي</span>
-                <strong id="totalAssetsSum" style="color: #38bdf8;">$500.00</strong>
+                <strong id="totalAssetsSum" style="color: #38bdf8;">$0.00</strong>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                 <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 18px; text-align: center;">
                     <span style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 6px;">محفظة السبوت</span>
-                    <strong id="spotBalanceVal" style="font-size: 20px; color: #34d399; font-family: monospace;">$500.00</strong>
+                    <strong id="spotBalanceVal" style="font-size: 20px; color: #34d399; font-family: monospace;">$0.00</strong>
                 </div>
                 <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 18px; text-align: center;">
                     <span style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 6px;">محفظة الفيوتشر</span>
@@ -607,7 +598,6 @@
             loadReferralsFromDatabase(false);
         }
 
-        // تفعيل الاستمرارية الدائمة للجلسة (browserLocalPersistence) قبل مراقبة حالة الدخول
         (async function bootstrapSession() {
             try {
                 await setPersistence(auth, browserLocalPersistence);
@@ -640,7 +630,6 @@
                         return;
                     }
 
-                    // انتظار لحظي للتأكد من عدم استعادة جلسة Firebase بعد إعادة فتح التطبيق
                     await new Promise((resolve) => setTimeout(resolve, 600));
                     if (auth.currentUser) {
                         await hydrateAuthenticatedUser(auth.currentUser);
