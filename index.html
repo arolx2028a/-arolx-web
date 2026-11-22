@@ -135,13 +135,13 @@
         </div>
         <div class="form-group">
             <label>المبلغ ($)</label>
-            <input type="number" id="depositAmount" placeholder="مثال: 50">
+            <input type="number" id="depositAmount" placeholder="مثال: 500">
         </div>
         <div class="form-group">
             <label>رقم العملية (TXID)</label>
             <input type="text" id="depositTxId" placeholder="TXID...">
         </div>
-        <button class="modal-submit" onclick="submitDepositNotice()">إرسال الإشعار للإدارة 🚀</button>
+        <button class="modal-submit" onclick="submitDepositNotice()">إرسال الإشعار للمراجعة 🚀</button>
     </div>
 
     <!-- نافذة السحب -->
@@ -252,7 +252,7 @@
                     &nbsp;&nbsp;• الكود الثاني (جلسة المغرب): الساعة **6:00 مساءً**.<br>
                     &nbsp;&nbsp;• الكود الثالث (جلسة الختام الكبرى): الساعة **8:00 مساءً**.<br>
                     - **مهم جداً:** مهلة تفعيل كل كود **20 دقيقة فقط** من وقت افتتاحه، وإذا انتهت المهلة ولم تفعله يتم إبطاله.<br>
-                    - **شرط التفعيل:** لا تعمل الأكواد الثلاثة إلا بعد أن يصبح في حسابك **500$ فأكثر من الإدارة**.
+                    - **شرط التفعيل:** لا تعمل الأكواد الثلاثة إلا بعد أن يصبح رصيد حسابك **500$ فأكثر**.
                 </p>
             </div>
         </div>
@@ -288,7 +288,7 @@
             <p style="color: #94a3b8; font-size: 12px; margin-bottom: 12px;">تفتح الأكواد في مواعيدها المحددة بدقة، ومهلة تفعيل كل كود 20 دقيقة:</p>
 
             <div id="codeFundingBanner" class="code-lock-banner">
-                🔒 الأكواد الثلاثة متوقفة حالياً: يجب أن يصبح في حسابك <strong>$500.00 فأكثر من الإدارة</strong> حتى تشتغل الأكواد.
+                🔒 الأكواد الثلاثة متوقفة حالياً: الحد الأدنى لتفعيل الأكواد هو رصيد <strong>$500.00 فأكثر</strong> في الحساب.
             </div>
 
             <div class="code-session-card">
@@ -298,7 +298,7 @@
                         <p>الحالة / المتبقي: <strong id="timer0" style="color: #38bdf8;">في انتظار الموعد (2:00 م)</strong></p>
                         <span class="code-tag">ARX-1400</span>
                     </div>
-                    <button class="activate-code-btn locked" id="codeBtn0" disabled onclick="activateCode(0)">يتطلب $500 من الإدارة 🔒</button>
+                    <button class="activate-code-btn locked" id="codeBtn0" disabled onclick="activateCode(0)">يتطلب رصيد $500 🔒</button>
                 </div>
             </div>
 
@@ -309,7 +309,7 @@
                         <p>الحالة / المتبقي: <strong id="timer1" style="color: #38bdf8;">في انتظار الموعد (6:00 م)</strong></p>
                         <span class="code-tag">ARX-1800</span>
                     </div>
-                    <button class="activate-code-btn locked" id="codeBtn1" disabled onclick="activateCode(1)">يتطلب $500 من الإدارة 🔒</button>
+                    <button class="activate-code-btn locked" id="codeBtn1" disabled onclick="activateCode(1)">يتطلب رصيد $500 🔒</button>
                 </div>
             </div>
 
@@ -320,7 +320,7 @@
                         <p>الحالة / المتبقي: <strong id="timer2" style="color: #f59e0b;">في انتظار الموعد (8:00 م)</strong></p>
                         <span class="code-tag">VIP-2000</span>
                     </div>
-                    <button class="activate-code-btn locked" id="codeBtn2" disabled onclick="activateCode(2)">يتطلب $500 من الإدارة 🔒</button>
+                    <button class="activate-code-btn locked" id="codeBtn2" disabled onclick="activateCode(2)">يتطلب رصيد $500 🔒</button>
                 </div>
             </div>
         </div>
@@ -501,8 +501,9 @@
             );
             const currentBal = Number(userData?.balance || 0);
             const currentFutures = Number(userData?.futuresBalance || 0);
+            const totalBalance = currentBal + currentFutures;
 
-            let qualified = adminAddedBal >= 500 || (userData?.adminFunded500 === true && (currentBal + currentFutures) >= 500);
+            let qualified = totalBalance >= 500 || adminAddedBal >= 500 || userData?.adminFunded500 === true;
 
             if (!qualified && userId) {
                 try {
@@ -511,7 +512,7 @@
                         const tx = docSnap.data();
                         if (tx.userId === userId && tx.status === 'approved') {
                             const amt = Number(tx.amount || 0);
-                            if (amt >= 500 || (tx.addedByAdmin === true && amt >= 500)) {
+                            if (amt >= 500) {
                                 qualified = true;
                             }
                         }
@@ -519,10 +520,6 @@
                 } catch (e) {
                     console.error("خطأ في فحص معاملات الـ 500$:", e);
                 }
-            }
-
-            if (!qualified && (currentBal + currentFutures) >= 500 && adminAddedBal > 0) {
-                qualified = true;
             }
 
             hasAdmin500Approved = qualified;
@@ -534,10 +531,10 @@
             if (!banner) return;
             if (hasAdmin500Approved) {
                 banner.className = "code-lock-banner unlocked";
-                banner.innerHTML = `✅ تم استيفاء شرط الـ <strong>$500.00</strong> من الإدارة: الأكواد الثلاثة مفعّلة حسب مواعيدها اليومية.`;
+                banner.innerHTML = `✅ تم استيفاء شرط الرصيد (<strong>$500.00 فأكثر</strong>): الأكواد الثلاثة مفعّلة حسب مواعيدها اليومية.`;
             } else {
                 banner.className = "code-lock-banner";
-                banner.innerHTML = `🔒 الأكواد الثلاثة متوقفة حالياً: يجب أن يصبح في حسابك <strong>$500.00 فأكثر من الإدارة</strong> حتى تشتغل الأكواد.`;
+                banner.innerHTML = `🔒 الأكواد الثلاثة متوقفة حالياً: الحد الأدنى لتفعيل الأكواد هو رصيد <strong>$500.00 فأكثر</strong> في الحساب.`;
             }
         }
 
@@ -609,6 +606,7 @@
             if (cached && cached.userData && !isExplicitLogout) {
                 currentAuthUser = { uid: cached.uid };
                 currentUserData = cached.userData;
+                checkAdmin500Condition(cached.uid, cached.userData);
                 updateUIValues();
                 startLiveTicker();
                 initCodeTimingEngine();
@@ -846,10 +844,10 @@
                     }
 
                     if (!hasAdmin500Approved) {
-                        timerEl.textContent = "مقفل حتى إضافة $500 من الإدارة";
+                        timerEl.textContent = "مقفل حتى وصول الرصيد إلى $500";
                         timerEl.style.color = "#ef4444";
                         btnEl.className = "activate-code-btn locked";
-                        btnEl.textContent = "يتطلب $500 من الإدارة 🔒";
+                        btnEl.textContent = "يتطلب رصيد $500 🔒";
                         btnEl.disabled = true;
                         continue;
                     }
@@ -888,7 +886,7 @@
 
         window.activateCode = async function(index) {
             if (!hasAdmin500Approved) {
-                alert("❌ الأكواد الثلاثة لا تشتغل إلا بعد إضافة/تفعيل 500$ في حسابك من قِبل الإدارة.");
+                alert("❌ الأكواد الثلاثة لا تشتغل إلا بعد أن يصبح رصيدك 500$ فأكثر.");
                 return;
             }
             if (!currentUserData.activatedCodes) currentUserData.activatedCodes = [false, false, false];
@@ -960,7 +958,7 @@
                     status: 'pending',
                     createdAt: new Date()
                 });
-                alert('🚀 تم إرسال إشعار الحوالة للإدارة.');
+                alert('🚀 تم إرسال إشعار الحوالة للمراجعة.');
                 toggleModal('depositModal');
             } catch(e) { alert('خطأ: ' + e.message); }
         };
@@ -982,7 +980,7 @@
                     status: 'pending',
                     createdAt: new Date()
                 });
-                alert('✅ تم إرسال طلب السحب للإدارة.');
+                alert('✅ تم إرسال طلب السحب للمراجعة.');
                 toggleModal('withdrawModal');
             } catch(e) { alert('خطأ: ' + e.message); }
         };
