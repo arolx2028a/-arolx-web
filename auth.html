@@ -30,6 +30,16 @@
         .auth-submit-btn:disabled { background: #334155; cursor: wait; }
 
         .auth-error-box { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 10px; padding: 10px; color: #ef4444; font-size: 12px; text-align: center; margin-bottom: 15px; display: none; }
+
+        .register-success-card { display: none; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 16px; padding: 18px; margin-top: 14px; text-align: right; }
+        .register-success-card.open { display: block; }
+        .register-success-card h4 { margin: 0 0 8px 0; color: #34d399; font-size: 15px; }
+        .register-success-card p { margin: 0 0 12px 0; color: #cbd5e1; font-size: 12px; line-height: 1.6; }
+        .created-code-box { background: #020617; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; font-family: monospace; color: #38bdf8; font-size: 14px; font-weight: bold; text-align: center; direction: ltr; margin-bottom: 12px; }
+        .success-actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .secondary-action-btn { flex: 1; background: #1e293b; color: #f8fafc; border: 1px solid #334155; padding: 10px 12px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .secondary-action-btn:hover { border-color: #38bdf8; }
+        .go-platform-btn { flex: 1; background: #0284c7; color: #fff; border: none; padding: 10px 12px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -67,6 +77,18 @@
                 <span style="font-size: 10px; color: #94a3b8; display: block; margin-top: 4px;">يمكنك لصق الكود كاملاً (مثل ARX-1000) وسيتم التعرف عليه.</span>
             </div>
             <button type="button" class="auth-submit-btn" id="regSubmitBtn" onclick="handleRegister()">إنشاء الحساب والانضمام ⚡</button>
+
+            <!-- بطاقة تأكيد بقاء المستخدم في نفس الصفحة بعد إنشاء الحساب -->
+            <div id="registerSuccessCard" class="register-success-card">
+                <h4>✅ تم إنشاء الحساب بنجاح وحفظه في المنصة</h4>
+                <p id="createdAccountSummary">تم تسجيل الحساب والبقاء في هذه الصفحة دون انتقال تلقائي.</p>
+                <div class="created-code-box" id="createdReferralCodeBox">ARX-1001</div>
+                <div class="success-actions-row">
+                    <button type="button" class="secondary-action-btn" onclick="copyCreatedAccountCode()">نسخ الكود 📋</button>
+                    <button type="button" class="secondary-action-btn" onclick="resetRegisterFormForAnother()">إنشاء حساب آخر</button>
+                    <button type="button" class="go-platform-btn" onclick="goToPlatformNow()">دخول المنصة</button>
+                </div>
+            </div>
         </div>
 
         <!-- 2. نموذج تسجيل الدخول -->
@@ -85,8 +107,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, getDocs, collection, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDocs, collection, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyB7kCAWBjr_Pin9izKlkcTqA1GEEKGSZsA",
@@ -98,20 +120,11 @@
           measurementId: "G-3BSEMM7PDS"
         };
 
-        const SESSION_STORAGE_KEY = "arolx_active_session_v1";
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        function saveSession(uid, userData) {
-            try {
-                localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
-                    uid,
-                    userData,
-                    savedAt: Date.now()
-                }));
-            } catch (_) {}
-        }
+        let lastCreatedCode = "";
 
         window.switchAuthMode = function(mode) {
             const regSec = document.getElementById('registerSection');
@@ -140,6 +153,28 @@
             errBox.style.display = 'block';
         }
 
+        window.copyCreatedAccountCode = function() {
+            if (!lastCreatedCode) return;
+            navigator.clipboard.writeText(lastCreatedCode).then(() => {
+                alert(`✅ تم نسخ الكود (${lastCreatedCode}) بنجاح.`);
+            }).catch((err) => {
+                console.error('فشل النسخ:', err);
+            });
+        };
+
+        window.resetRegisterFormForAnother = function() {
+            document.getElementById('regName').value = "";
+            document.getElementById('regEmail').value = "";
+            document.getElementById('regPassword').value = "";
+            document.getElementById('regReferral').value = "";
+            document.getElementById('registerSuccessCard').classList.remove('open');
+            document.getElementById('authErrorMsg').style.display = 'none';
+        };
+
+        window.goToPlatformNow = function() {
+            window.location.href = 'index.html';
+        };
+
         window.handleRegister = async function() {
             const btn = document.getElementById('regSubmitBtn');
             const name = document.getElementById('regName').value.trim();
@@ -148,6 +183,7 @@
             const rawReferralText = document.getElementById('regReferral').value.trim();
 
             document.getElementById('authErrorMsg').style.display = 'none';
+            document.getElementById('registerSuccessCard').classList.remove('open');
 
             if(!name || !email || !password || !rawReferralText) {
                 showError('❌ يرجى تعبئة كافة الحقول بما فيها كود أو رقم حساب الصديق الداعي!');
@@ -171,7 +207,6 @@
             btn.textContent = "جاري التحقق وإنشاء الحساب... ⏳";
 
             try {
-                await setPersistence(auth, browserLocalPersistence);
                 const userCred = await createUserWithEmailAndPassword(auth, email, password);
                 const newUserUid = userCred.user.uid;
 
@@ -213,10 +248,9 @@
                     referredByName: uplineName || "الإدارة الأساسية",
                     referredByNumber: targetUserNumber,
                     activatedCodes: [false, false, false],
-                    lastCodeDate: new Date().toDateString(),
+                    lastCodeDate: "",
                     myReferrals: [],
-                    createdAt: new Date(),
-                    joinedAt: new Date().toISOString()
+                    createdAt: new Date()
                 };
 
                 await setDoc(doc(db, "users", newUserUid), newUserData);
@@ -231,8 +265,16 @@
                     });
                 }
 
-                saveSession(newUserUid, newUserData);
-                window.location.replace('index.html');
+                lastCreatedCode = `ARX-${assignedUserNumber}`;
+                document.getElementById('createdAccountSummary').innerHTML =
+                    `الاسم: <strong style="color:#fff;">${name}</strong><br>` +
+                    `رقم الحساب: <strong style="color:#38bdf8; font-family:monospace;">${assignedUserNumber}</strong><br>` +
+                    `الداعي: <strong style="color:#a5b4fc;">${uplineName || "الإدارة الأساسية"} (${targetUserNumber})</strong>`;
+                document.getElementById('createdReferralCodeBox').textContent = lastCreatedCode;
+                document.getElementById('registerSuccessCard').classList.add('open');
+
+                btn.disabled = false;
+                btn.textContent = "إنشاء الحساب والانضمام ⚡";
 
             } catch(e) {
                 let errMsg = e.message;
@@ -258,20 +300,8 @@
             btn.textContent = "جاري الدخول... ⏳";
 
             try {
-                await setPersistence(auth, browserLocalPersistence);
-                const cred = await signInWithEmailAndPassword(auth, email, password);
-                const uid = cred.user.uid;
-                const snap = await getDoc(doc(db, "users", uid));
-                const userData = snap.exists() ? snap.data() : {
-                    fullName: "متداول",
-                    email,
-                    balance: 0,
-                    futuresBalance: 0,
-                    todayProfit: 0,
-                    userNumber: 1000
-                };
-                saveSession(uid, userData);
-                window.location.replace('index.html');
+                await signInWithEmailAndPassword(auth, email, password);
+                window.location.href = 'index.html';
             } catch(e) {
                 showError('❌ البريد الإلكتروني أو كلمة المرور غير صحيحة!');
                 btn.disabled = false;
