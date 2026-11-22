@@ -4,15 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ArolX Pro - تسجيل الدخول وإنشاء الحساب</title>
-    <link rel="manifest" href="./manifest.json" />
-    <meta name="theme-color" content="#0f172a" />
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js").catch(() => {});
-        });
-      }
-    </script>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background: #020617; color: #f8fafc; margin: 0; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
@@ -206,7 +197,7 @@
                 const newUserData = {
                     fullName: name,
                     email: email,
-                    balance: 500,
+                    balance: 0,
                     futuresBalance: 0,
                     todayProfit: 0,
                     userNumber: assignedUserNumber,
