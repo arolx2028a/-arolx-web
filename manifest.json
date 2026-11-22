@@ -1,0 +1,20 @@
+{
+  "name": "ArolX Pro",
+  "short_name": "ArolX Pro",
+  "description": "منصة ArolX Pro للتداول الاحترافي والتراكمي",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2534/2534204.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
