@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ArolX Pro - منصة التداول الاحترافية</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
@@ -546,8 +551,7 @@
             if (userSnap.exists()) {
                 currentUserData = userSnap.data();
             } else {
-                const cached = readCachedSession();
-                currentUserData = (cached && cached.uid === user.uid && cached.userData) ? cached.userData : {
+                currentUserData = {
                     fullName: "متداول",
                     balance: 0,
                     futuresBalance: 0,
@@ -560,11 +564,7 @@
                     myReferrals: [],
                     joinedAt: new Date().toISOString()
                 };
-                try {
-                    await setDoc(userRef, currentUserData);
-                } catch (e) {
-                    console.warn("تعذر إنشاء مستند المستخدم مؤقتاً:", e);
-                }
+                await setDoc(userRef, currentUserData);
             }
 
             if (!currentUserData.joinedAt) {
@@ -572,6 +572,7 @@
                     ? currentUserData.createdAt.toDate().toISOString()
                     : new Date().toISOString();
                 currentUserData.joinedAt = fallbackDate;
+                await updateDoc(userRef, { joinedAt: fallbackDate });
             }
 
             const todayStr = new Date().toDateString();
@@ -579,15 +580,11 @@
                 currentUserData.lastCodeDate = todayStr;
                 currentUserData.activatedCodes = [false, false, false];
                 currentUserData.todayProfit = 0;
-                try {
-                    await updateDoc(userRef, {
-                        lastCodeDate: todayStr,
-                        activatedCodes: [false, false, false],
-                        todayProfit: 0
-                    });
-                } catch (e) {
-                    console.warn("تعذر تحديث تاريخ الأكواد اليومي:", e);
-                }
+                await updateDoc(userRef, {
+                    lastCodeDate: todayStr,
+                    activatedCodes: [false, false, false],
+                    todayProfit: 0
+                });
             }
 
             saveCachedSession(user.uid, currentUserData);
@@ -621,10 +618,7 @@
                 hasInitializedSession = true;
             }
 
-            let authResolved = false;
-
             onAuthStateChanged(auth, async (user) => {
-                authResolved = true;
                 if (user) {
                     isExplicitLogout = false;
                     try {
@@ -635,11 +629,11 @@
                 } else {
                     if (isExplicitLogout) {
                         clearCachedSession();
-                        window.location.replace('auth.html');
+                        window.location.href = 'auth.html';
                         return;
                     }
 
-                    await new Promise((resolve) => setTimeout(resolve, 1200));
+                    await new Promise((resolve) => setTimeout(resolve, 600));
                     if (auth.currentUser) {
                         await hydrateAuthenticatedUser(auth.currentUser);
                         return;
@@ -647,19 +641,10 @@
 
                     const fallbackSession = readCachedSession();
                     if (!fallbackSession || !fallbackSession.uid) {
-                        window.location.replace('auth.html');
+                        window.location.href = 'auth.html';
                     }
                 }
             });
-
-            setTimeout(() => {
-                if (!authResolved && !isExplicitLogout) {
-                    const fallbackSession = readCachedSession();
-                    if (!fallbackSession || !fallbackSession.uid) {
-                        window.location.replace('auth.html');
-                    }
-                }
-            }, 2500);
         })();
 
         function updateUIValues() {
@@ -1114,7 +1099,7 @@
             isExplicitLogout = true;
             clearCachedSession();
             await signOut(auth);
-            window.location.replace('auth.html');
+            window.location.href = 'auth.html';
         };
     </script>
 </body>
